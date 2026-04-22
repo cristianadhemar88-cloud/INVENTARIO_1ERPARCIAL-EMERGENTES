@@ -3,7 +3,6 @@ import sqlite3
 
 app = Flask(__name__)
 
-# 🔹 Crear base de datos
 def crear_bd():
     conn = sqlite3.connect('inventario.db')
     cursor = conn.cursor()
@@ -23,11 +22,9 @@ def crear_bd():
 
 crear_bd()
 
-# 🔹 CONEXIÓN
 def conectar():
     return sqlite3.connect('inventario.db')
 
-# 🔹 LISTAR PRODUCTOS
 @app.route('/')
 def index():
     conn = conectar()
@@ -38,7 +35,6 @@ def index():
 
     return render_template('index.html', productos=productos)
 
-# 🔹 AGREGAR PRODUCTO
 @app.route('/agregar', methods=['GET', 'POST'])
 def agregar():
     if request.method == 'POST':
@@ -60,7 +56,6 @@ def agregar():
 
     return render_template('agregar.html')
 
-# 🔹 EDITAR PRODUCTO
 @app.route('/editar/<int:id>', methods=['GET', 'POST'])
 def editar(id):
     conn = conectar()
@@ -87,7 +82,6 @@ def editar(id):
 
     return render_template('editar.html', producto=producto)
 
-# 🔹 ELIMINAR PRODUCTO
 @app.route('/eliminar/<int:id>')
 def eliminar(id):
     conn = conectar()
@@ -98,6 +92,5 @@ def eliminar(id):
 
     return redirect('/')
 
-# 🔹 EJECUTAR
 if __name__ == '__main__':
     app.run(debug=True)
