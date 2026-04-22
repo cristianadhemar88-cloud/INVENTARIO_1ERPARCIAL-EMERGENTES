@@ -1,0 +1,103 @@
+from flask import Flask, render_template, request, redirect
+import sqlite3
+
+app = Flask(__name__)
+
+# 🔹 Crear base de datos
+def crear_bd():
+    conn = sqlite3.connect('inventario.db')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS productos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
+            categoria TEXT NOT NULL,
+            precio REAL NOT NULL,
+            stock INTEGER NOT NULL
+        )
+    ''')
+
+    conn.commit()
+    conn.close()
+
+crear_bd()
+
+# 🔹 CONEXIÓN
+def conectar():
+    return sqlite3.connect('inventario.db')
+
+# 🔹 LISTAR PRODUCTOS
+@app.route('/')
+def index():
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM productos")
+    productos = cursor.fetchall()
+    conn.close()
+
+    return render_template('index.html', productos=productos)
+
+# 🔹 AGREGAR PRODUCTO
+@app.route('/agregar', methods=['GET', 'POST'])
+def agregar():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        categoria = request.form['categoria']
+        precio = request.form['precio']
+        stock = request.form['stock']
+
+        conn = conectar()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO productos (nombre, categoria, precio, stock) VALUES (?, ?, ?, ?)",
+            (nombre, categoria, precio, stock)
+        )
+        conn.commit()
+        conn.close()
+
+        return redirect('/')
+
+    return render_template('agregar.html')
+
+# 🔹 EDITAR PRODUCTO
+@app.route('/editar/<int:id>', methods=['GET', 'POST'])
+def editar(id):
+    conn = conectar()
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        categoria = request.form['categoria']
+        precio = request.form['precio']
+        stock = request.form['stock']
+
+        cursor.execute(
+            "UPDATE productos SET nombre=?, categoria=?, precio=?, stock=? WHERE id=?",
+            (nombre, categoria, precio, stock, id)
+        )
+        conn.commit()
+        conn.close()
+
+        return redirect('/')
+
+    cursor.execute("SELECT * FROM productos WHERE id=?", (id,))
+    producto = cursor.fetchone()
+    conn.close()
+
+    return render_template('editar.html', producto=producto)
+
+# 🔹 ELIMINAR PRODUCTO
+@app.route('/eliminar/<int:id>')
+def eliminar(id):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM productos WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+
+    return redirect('/')
+
+# 🔹 EJECUTAR
+if __name__ == '__main__':
+    app.run(debug=True)
